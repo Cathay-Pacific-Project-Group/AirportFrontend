@@ -1,3 +1,4 @@
+// Reminder: Make sure to run `npm run dev` or `yarn dev` in your frontend directory to start the Vite dev server at http://localhost:5173/
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';         // ✅ 改這一行
