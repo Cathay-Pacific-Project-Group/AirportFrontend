@@ -10,6 +10,23 @@ function Dashboard({ username: employeeID = "", onLogout }) {
   const [editRoutine, setEditRoutine] = useState(null);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState(""); // Optional: success message
+  const [exporting, setExporting] = useState(false); // Export loading state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addRoutine, setAddRoutine] = useState({
+    date: "",
+    sn: "",
+    flight: "",
+    from: "",
+    to: "",
+    sta: "",
+    eta: "",
+    ata: "",
+    remarks: "",
+    employeeID: "",
+    supervisor: "",
+  });
+  const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   // Fetch permission and initial routines
   useEffect(() => {
@@ -93,6 +110,163 @@ function Dashboard({ username: employeeID = "", onLogout }) {
     setEditRoutine((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Export to Excel
+  const handleExport = async () => {
+    setExporting(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/routine/export?employeeID=${employeeID}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      if (!res.ok) throw new Error("Failed to export routine.");
+      const blob = await res.blob();
+      // Download file
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "routine.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message || "Failed to export routine.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Add routine (admin only)
+  const handleAddRoutine = async () => {
+    setAdding(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/routine/import?employeeID=${employeeID}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(addRoutine),
+        }
+      );
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Failed to add routine.");
+      setShowAddModal(false);
+      setAddRoutine({
+        date: "",
+        sn: "",
+        flight: "",
+        from: "",
+        to: "",
+        sta: "",
+        eta: "",
+        ata: "",
+        remarks: "",
+        employeeID: "",
+        supervisor: "",
+      });
+      setSuccessMsg("Routine added successfully.");
+      // Refresh table
+      setLoading(true);
+      const routineUrl = `http://localhost:8080/api/routine?employeeID=${employeeID}`;
+      const res2 = await fetch(routineUrl);
+      const data = await res2.json();
+      setRoutines(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message || "Failed to add routine.");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Import Excel (admin only)
+  const handleImportExcel = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImporting(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(
+        `http://localhost:8080/api/routine/import/excel?employeeID=${employeeID}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      // If backend returns error, show message
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("Import endpoint not found. Please check backend implementation.");
+        }
+        throw new Error("Failed to import routine. (Check if Excel time columns are in HH:mm:ss format)");
+      }
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Failed to import routine.");
+      setSuccessMsg("Excel imported successfully.");
+      // Refresh table
+      setLoading(true);
+      const routineUrl = `http://localhost:8080/api/routine?employeeID=${employeeID}`;
+      const res2 = await fetch(routineUrl);
+      const data = await res2.json();
+      setRoutines(data);
+      setLoading(false);
+    } catch (err) {
+      setError(
+        (err && err.message === "Failed to fetch")
+          ? "Network error: Unable to reach backend or backend does not support Excel import. Is the backend running and does it have /api/routine/import/excel?"
+          : (err.message || "Failed to import routine. If importing time columns, make sure they are in HH:mm:ss format.")
+      );
+    } finally {
+      setImporting(false);
+      e.target.value = ""; // reset file input
+    }
+  };
+
+  // Delete routine (admin only)
+  const handleDeleteRoutine = async (jobId) => {
+    if (!window.confirm("Are you sure you want to delete this routine?")) return;
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/routine/${jobId}?employeeID=${employeeID}`,
+        { method: "DELETE" }
+      );
+      // If backend returns error, show message
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("Delete endpoint not found. Please check backend implementation.");
+        }
+        throw new Error("Failed to delete routine.");
+      }
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Failed to delete routine.");
+      setSuccessMsg("Routine deleted successfully.");
+      // Refresh table
+      setLoading(true);
+      const routineUrl = `http://localhost:8080/api/routine?employeeID=${employeeID}`;
+      const res2 = await fetch(routineUrl);
+      const data = await res2.json();
+      setRoutines(data);
+      setLoading(false);
+    } catch (err) {
+      setError(
+        (err && err.message === "Failed to fetch")
+          ? "Network error: Unable to reach backend or backend does not support DELETE. Is the backend running and does it have DELETE /api/routine/{jobId}?employeeID=...?"
+          : (err.message || "Failed to delete routine.")
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div
       className="min-h-screen px-2 py-8 font-sans"
@@ -141,6 +315,173 @@ function Dashboard({ username: employeeID = "", onLogout }) {
           Logout
         </button>
       </div>
+
+      {/* Export & Add & Import Buttons */}
+      <div style={{ marginBottom: 18, textAlign: "right", display: "flex", justifyContent: "flex-end", gap: 12 }}>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          style={{
+            padding: "9px 22px",
+            background: "linear-gradient(90deg, #43a047 0%, #388e3c 100%)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 7,
+            fontWeight: 700,
+            fontSize: 16,
+            boxShadow: "0 2px 8px 0 rgba(67,160,71,0.10)",
+            cursor: exporting ? "not-allowed" : "pointer",
+            transition: "background 0.2s",
+            letterSpacing: 1,
+          }}
+        >
+          {exporting ? "Exporting..." : "Export to Excel"}
+        </button>
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                padding: "9px 22px",
+                background: "linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 7,
+                fontWeight: 700,
+                fontSize: 16,
+                boxShadow: "0 2px 8px 0 rgba(33,150,243,0.10)",
+                cursor: adding ? "not-allowed" : "pointer",
+                transition: "background 0.2s",
+                letterSpacing: 1,
+              }}
+            >
+              Add Routine
+            </button>
+            <label style={{ position: "relative" }}>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                style={{ display: "none" }}
+                onChange={handleImportExcel}
+                disabled={importing}
+              />
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "9px 22px",
+                  background: "linear-gradient(90deg, #388e3c 0%, #43a047 100%)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 7,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  boxShadow: "0 2px 8px 0 rgba(67,160,71,0.10)",
+                  cursor: importing ? "not-allowed" : "pointer",
+                  transition: "background 0.2s",
+                  letterSpacing: 1,
+                  userSelect: "none",
+                }}
+              >
+                {importing ? "Importing..." : "Import Excel"}
+              </span>
+            </label>
+          </>
+        )}
+      </div>
+
+      {/* Add Routine Modal (admin only) */}
+      {showAddModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(36, 50, 77, 0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: "2rem 2.5rem",
+              boxShadow: "0 8px 32px rgba(36,50,77,0.18)",
+              minWidth: 340,
+              maxWidth: 400,
+            }}
+          >
+            <h3 style={{ fontSize: 22, fontWeight: 700, color: "#23395d", marginBottom: 18, letterSpacing: 1 }}>
+              Add New Routine
+            </h3>
+            <div style={{ color: "#1976d2", fontSize: 13, marginBottom: 10, fontWeight: 500 }}>
+              <div>Sample format:</div>
+              <ul style={{ margin: "6px 0 0 18px", padding: 0, fontSize: 12 }}>
+                <li>Date: <span style={{ color: "#388e3c" }}>2024-07-01</span></li>
+                <li>STA/ETA/ATA: <span style={{ color: "#388e3c" }}>HH:mm:ss (e.g. 08:30:00)</span></li>
+                <li>SN/Flight/From/To/Remarks/Staff In Charge/Supervisor: <span style={{ color: "#388e3c" }}>Text</span></li>
+              </ul>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <input placeholder="Date (e.g. 2024-07-01)" value={addRoutine.date} onChange={e => setAddRoutine(r => ({ ...r, date: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="SN" value={addRoutine.sn} onChange={e => setAddRoutine(r => ({ ...r, sn: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="Flight" value={addRoutine.flight} onChange={e => setAddRoutine(r => ({ ...r, flight: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="From" value={addRoutine.from} onChange={e => setAddRoutine(r => ({ ...r, from: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="To" value={addRoutine.to} onChange={e => setAddRoutine(r => ({ ...r, to: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="STA (e.g. 08:30:00)" value={addRoutine.sta} onChange={e => setAddRoutine(r => ({ ...r, sta: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="ETA (e.g. 08:45:00)" value={addRoutine.eta} onChange={e => setAddRoutine(r => ({ ...r, eta: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="ATA (e.g. 08:50:00)" value={addRoutine.ata} onChange={e => setAddRoutine(r => ({ ...r, ata: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="Remarks" value={addRoutine.remarks} onChange={e => setAddRoutine(r => ({ ...r, remarks: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="Staff In Charge" value={addRoutine.employeeID} onChange={e => setAddRoutine(r => ({ ...r, employeeID: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+              <input placeholder="Supervisor" value={addRoutine.supervisor} onChange={e => setAddRoutine(r => ({ ...r, supervisor: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 22 }}>
+              <button
+                onClick={handleAddRoutine}
+                disabled={adding}
+                style={{
+                  padding: "9px 22px",
+                  background: "linear-gradient(90deg, #43a047 0%, #388e3c 100%)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 7,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  boxShadow: "0 2px 8px 0 rgba(67,160,71,0.10)",
+                  cursor: adding ? "not-allowed" : "pointer",
+                  transition: "background 0.2s",
+                  letterSpacing: 1,
+                }}
+              >
+                {adding ? "Adding..." : "Add"}
+              </button>
+              <button
+                onClick={() => setShowAddModal(false)}
+                disabled={adding}
+                style={{
+                  padding: "9px 22px",
+                  background: "#eee",
+                  color: "#23395d",
+                  border: "none",
+                  borderRadius: 7,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  boxShadow: "0 2px 8px 0 rgba(36,50,77,0.10)",
+                  cursor: adding ? "not-allowed" : "pointer",
+                  transition: "background 0.2s",
+                  letterSpacing: 1,
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div
@@ -228,7 +569,6 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                   <th className="px-4 py-3 text-left font-semibold">Remarks</th>
                   <th className="px-4 py-3 text-left font-semibold">Staff In Charge</th>
                   <th className="px-4 py-3 text-left font-semibold">Supervisor</th>
-                  <th className="px-4 py-3 text-left font-semibold">JobID</th>
                   <th className="px-4 py-3 text-left font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -332,14 +672,6 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                           />
                         </td>
                         <td className="px-4 py-2">
-                          <input
-                            value={editRoutine.JobID}
-                            disabled
-                            className="border rounded px-2 py-1 w-20 bg-gray-100 text-gray-500"
-                            style={{ border: "1.5px solid #b71c1c" }}
-                          />
-                        </td>
-                        <td className="px-4 py-2">
                           <button
                             onClick={handleSave}
                             disabled={saving}
@@ -394,8 +726,7 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                         <td className="px-4 py-2">{item.remarks}</td>
                         <td className="px-4 py-2">{item.employeeID}</td>
                         <td className="px-4 py-2">{item.supervisor}</td>
-                        <td className="px-4 py-2">{item.JobID}</td>
-                        <td className="px-4 py-2">
+                        <td className="px-4 py-2" style={{ display: "flex", gap: 8 }}>
                           <button
                             onClick={() => handleEdit(idx)}
                             style={{
@@ -414,6 +745,26 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                           >
                             Edit
                           </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDeleteRoutine(item.JobID)}
+                              style={{
+                                padding: "7px 18px",
+                                background: "linear-gradient(90deg, #d32f2f 0%, #b71c1c 100%)",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 7,
+                                fontWeight: 700,
+                                fontSize: 15,
+                                boxShadow: "0 2px 8px 0 rgba(211,47,47,0.10)",
+                                cursor: "pointer",
+                                transition: "background 0.2s",
+                                letterSpacing: 1,
+                              }}
+                            >
+                              Delete
+                            </button>
+                          )}
                         </td>
                       </>
                     )}
