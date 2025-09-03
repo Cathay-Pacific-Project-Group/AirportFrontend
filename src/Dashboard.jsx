@@ -27,6 +27,10 @@ function Dashboard({ username: employeeID = "", onLogout }) {
   });
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
+  // Search and Sort states
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("date");
+  const [order, setOrder] = useState("asc");
 
   // Fetch permission and initial routines
   useEffect(() => {
@@ -43,7 +47,14 @@ function Dashboard({ username: employeeID = "", onLogout }) {
         const admin = perm.permission === "Admin";
         setIsAdmin(admin);
 
-        const routineUrl = `http://localhost:8080/api/routine?employeeID=${employeeID}`;
+        // Construct search and sort parameters
+        const params = new URLSearchParams({
+          employeeID,
+        });
+        if (search) params.append("search", search);
+        if (sortBy) params.append("sortBy", sortBy);
+        if (order) params.append("order", order);
+        const routineUrl = `http://localhost:8080/api/routine?${params.toString()}`;
         const res = await fetch(routineUrl);
         if (!res.ok) throw new Error("Failed to fetch routine data");
         const data = await res.json();
@@ -59,7 +70,7 @@ function Dashboard({ username: employeeID = "", onLogout }) {
       }
     };
     fetchData();
-  }, [employeeID]);
+  }, [employeeID, search, sortBy, order]);
 
   // Start editing a row
   const handleEdit = (idx) => {
@@ -506,6 +517,23 @@ function Dashboard({ username: employeeID = "", onLogout }) {
           >
             {isAdmin ? "All Employees' Routine Table" : "My Duty Routine"}
           </h2>
+          {/* Search Box */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                padding: "7px 12px",
+                borderRadius: 6,
+                border: "1.5px solid #b71c1c",
+                fontSize: 15,
+                minWidth: 120,
+                outline: "none"
+              }}
+            />
+          </div>
         </div>
         {loading ? (
           <div className="text-center py-8 text-lg" style={{ color: "#7b1f2b" }}>
@@ -558,17 +586,39 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                 }}
               >
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Date</th>
-                  <th className="px-4 py-3 text-left font-semibold">SN</th>
-                  <th className="px-4 py-3 text-left font-semibold">Flight</th>
-                  <th className="px-4 py-3 text-left font-semibold">From</th>
-                  <th className="px-4 py-3 text-left font-semibold">To</th>
-                  <th className="px-4 py-3 text-left font-semibold">STA</th>
-                  <th className="px-4 py-3 text-left font-semibold">ETA</th>
-                  <th className="px-4 py-3 text-left font-semibold">ATA</th>
-                  <th className="px-4 py-3 text-left font-semibold">Remarks</th>
-                  <th className="px-4 py-3 text-left font-semibold">Staff In Charge</th>
-                  <th className="px-4 py-3 text-left font-semibold">Supervisor</th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('date'); setOrder(order === 'asc' && sortBy==='date' ? 'desc' : 'asc'); }}>
+                    Date {sortBy==='date' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('sn'); setOrder(order === 'asc' && sortBy==='sn' ? 'desc' : 'asc'); }}>
+                    SN {sortBy==='sn' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('flight'); setOrder(order === 'asc' && sortBy==='flight' ? 'desc' : 'asc'); }}>
+                    Flight {sortBy==='flight' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('from'); setOrder(order === 'asc' && sortBy==='from' ? 'desc' : 'asc'); }}>
+                    From {sortBy==='from' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('to'); setOrder(order === 'asc' && sortBy==='to' ? 'desc' : 'asc'); }}>
+                    To {sortBy==='to' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('sta'); setOrder(order === 'asc' && sortBy==='sta' ? 'desc' : 'asc'); }}>
+                    STA {sortBy==='sta' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('eta'); setOrder(order === 'asc' && sortBy==='eta' ? 'desc' : 'asc'); }}>
+                    ETA {sortBy==='eta' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('ata'); setOrder(order === 'asc' && sortBy==='ata' ? 'desc' : 'asc'); }}>
+                    ATA {sortBy==='ata' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('remarks'); setOrder(order === 'asc' && sortBy==='remarks' ? 'desc' : 'asc'); }}>
+                    Remarks {sortBy==='remarks' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('employeeID'); setOrder(order === 'asc' && sortBy==='employeeID' ? 'desc' : 'asc'); }}>
+                    Staff In Charge {sortBy==='employeeID' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('supervisor'); setOrder(order === 'asc' && sortBy==='supervisor' ? 'desc' : 'asc'); }}>
+                    Supervisor {sortBy==='supervisor' ? (order==='asc'?'▲':'▼') : ''}
+                  </th>
                   <th className="px-4 py-3 text-left font-semibold">Actions</th>
                 </tr>
               </thead>
