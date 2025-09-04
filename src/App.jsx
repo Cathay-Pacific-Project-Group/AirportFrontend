@@ -9,6 +9,7 @@ function App() {
   const [username, setUsername] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [page, setPage] = useState("home");
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
 
   // Handle login success
   const handleLogin = async (user) => {
@@ -32,28 +33,85 @@ function App() {
     setIsAdmin(false);
   };
 
+  // Toggle navigation collapse
+  const toggleNav = () => {
+    setIsNavCollapsed(!isNavCollapsed);
+  };
+
   if (!isLoggedIn) {
     return <LoginPage onLogin={handleLogin} />;
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div style={{ display: "flex", minHeight: "100vh", overflow: "hidden" }}>
       {/* Left Navigation Panel */}
       <nav
         style={{
-          width: 210,
+          width: isNavCollapsed ? 70 : 210,
           background: "linear-gradient(135deg, #23395d 0%, #4f8fc0 100%)",
           color: "#fff",
-          padding: "2.5rem 1.2rem 1.2rem 1.2rem",
+          padding: isNavCollapsed ? "2.5rem 0.5rem 1.2rem 0.5rem" : "2.5rem 1.2rem 1.2rem 1.2rem",
           display: "flex",
           flexDirection: "column",
           gap: 18,
           boxShadow: "2px 0 12px 0 rgba(36,50,77,0.10)",
+          transition: "width 0.3s ease, padding 0.3s ease",
+          position: "fixed", 
+          top: 0,
+          left: 0,
+          bottom: 0,
+          zIndex: 1000,
+          overflowY: "auto", 
+          overflowX: "hidden",
+          borderRadius: "0 15px 15px 0",
+          flexShrink: 0,
         }}
       >
-        <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 30, letterSpacing: 1 }}>
-          <span role="img" aria-label="logo">🛫</span> Staff System
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={toggleNav}
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            background: "rgba(255,255,255,0.2)",
+            border: "none",
+            borderRadius: "50%",
+            width: 28,
+            height: 28,
+            color: "#fff",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 16,
+            zIndex: 10,
+            transition: "all 0.2s ease",
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = "rgba(255,255,255,0.3)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "rgba(255,255,255,0.2)";
+          }}
+        >
+          {isNavCollapsed ? "→" : "←"}
+        </button>
+
+        <div style={{ 
+          fontWeight: 800, 
+          fontSize: isNavCollapsed ? 18 : 22, 
+          marginBottom: 30, 
+          letterSpacing: 1,
+          textAlign: isNavCollapsed ? "center" : "left",
+          transition: "all 0.3s ease",
+          whiteSpace: "nowrap",
+          overflow: "hidden"
+        }}>
+          <span role="img" aria-label="logo">🛫</span> 
+          {!isNavCollapsed && " Staff System"}
         </div>
+        
         <button
           onClick={() => setPage("home")}
           style={{
@@ -62,16 +120,33 @@ function App() {
             fontWeight: 700,
             fontSize: 16,
             border: "none",
-            borderRadius: 7,
+            borderRadius: "10px", 
             padding: "12px 0",
             marginBottom: 2,
             cursor: "pointer",
-            transition: "background 0.2s",
+            transition: "all 0.2s ease",
             letterSpacing: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: isNavCollapsed ? "center" : "flex-start",
+            paddingLeft: isNavCollapsed ? 0 : 15,
+          }}
+          title="Home"
+          onMouseOver={(e) => {
+            if (page !== "home") {
+              e.target.style.background = "rgba(255,255,255,0.1)";
+            }
+          }}
+          onMouseOut={(e) => {
+            if (page !== "home") {
+              e.target.style.background = "transparent";
+            }
           }}
         >
-          Home
+          <span style={{ marginRight: isNavCollapsed ? 0 : 10 }}>🏠</span>
+          {!isNavCollapsed && "Home"}
         </button>
+        
         <button
           onClick={() => setPage("dashboard")}
           style={{
@@ -80,16 +155,33 @@ function App() {
             fontWeight: 700,
             fontSize: 16,
             border: "none",
-            borderRadius: 7,
+            borderRadius: "10px",
             padding: "12px 0",
             marginBottom: 2,
             cursor: "pointer",
-            transition: "background 0.2s",
+            transition: "all 0.2s ease",
             letterSpacing: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: isNavCollapsed ? "center" : "flex-start",
+            paddingLeft: isNavCollapsed ? 0 : 15,
+          }}
+          title="Dashboard"
+          onMouseOver={(e) => {
+            if (page !== "dashboard") {
+              e.target.style.background = "rgba(255,255,255,0.1)";
+            }
+          }}
+          onMouseOut={(e) => {
+            if (page !== "dashboard") {
+              e.target.style.background = "transparent";
+            }
           }}
         >
-          Dashboard
+          <span style={{ marginRight: isNavCollapsed ? 0 : 10 }}>📊</span>
+          {!isNavCollapsed && "Dashboard"}
         </button>
+        
         {isAdmin && (
           <button
             onClick={() => setPage("user")}
@@ -99,18 +191,75 @@ function App() {
               fontWeight: 700,
               fontSize: 16,
               border: "none",
-              borderRadius: 7,
+              borderRadius: "10px", 
               padding: "12px 0",
               marginBottom: 2,
               cursor: "pointer",
-              transition: "background 0.2s",
+              transition: "all 0.2s ease",
               letterSpacing: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isNavCollapsed ? "center" : "flex-start",
+              paddingLeft: isNavCollapsed ? 0 : 15,
+            }}
+            title="User Maintenance"
+            onMouseOver={(e) => {
+              if (page !== "user") {
+                e.target.style.background = "rgba(255,255,255,0.1)";
+              }
+            }}
+            onMouseOut={(e) => {
+              if (page !== "user") {
+                e.target.style.background = "transparent";
+              }
             }}
           >
-            User Maintenance
+            <span style={{ marginRight: isNavCollapsed ? 0 : 10 }}>👥</span>
+            {!isNavCollapsed && "User Maintenance"}
           </button>
         )}
+        
         <div style={{ flex: 1 }} />
+        
+        <div style={{
+          padding: isNavCollapsed ? "10px 0" : "10px 15px",
+          borderTop: "1px solid rgba(255,255,255,0.2)",
+          marginTop: 10,
+          textAlign: isNavCollapsed ? "center" : "left",
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          borderRadius: "8px", 
+          background: "rgba(0,0,0,0.1)", 
+        }}>
+          {!isNavCollapsed && (
+            <div style={{ fontSize: 14, marginBottom: 5, opacity: 0.8 }}>
+              Role:
+            </div>
+          )}
+          <div style={{ 
+            fontWeight: 600, 
+            fontSize: isNavCollapsed ? 12 : 14,
+            overflow: "hidden",
+            textOverflow: "ellipsis"
+          }}>
+            {isNavCollapsed ? isAdmin ? "AD" : "US" : isAdmin ? "Admin" : "User"}
+          </div>
+          <br/>
+          {!isNavCollapsed && (
+            <div style={{ fontSize: 14, marginBottom: 5, opacity: 0.8 }}>
+              Logged in as:
+            </div>
+          )}
+          <div style={{ 
+            fontWeight: 600, 
+            fontSize: isNavCollapsed ? 12 : 14,
+            overflow: "hidden",
+            textOverflow: "ellipsis"
+          }}>
+            {isNavCollapsed ? username.substring(0, 3).toUpperCase() : username}
+          </div>
+        </div>
+        
         <button
           onClick={handleLogout}
           style={{
@@ -119,18 +268,40 @@ function App() {
             fontWeight: 700,
             fontSize: 16,
             border: "none",
-            borderRadius: 7,
+            borderRadius: "10px", 
             padding: "12px 0",
             marginTop: 10,
             cursor: "pointer",
             letterSpacing: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: isNavCollapsed ? "center" : "flex-start",
+            paddingLeft: isNavCollapsed ? 0 : 15,
+            transition: "all 0.2s ease",
+          }}
+          title="Logout"
+          onMouseOver={(e) => {
+            e.target.style.background = "#b71c1c";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "#d32f2f";
           }}
         >
-          Logout
+          <span style={{ marginRight: isNavCollapsed ? 0 : 10 }}>🚪</span>
+          {!isNavCollapsed && "Logout"}
         </button>
       </nav>
+      
       {/* Main Content */}
-      <div style={{ flex: 1, minHeight: "100vh" }}>
+      <div style={{ 
+        flex: 1, 
+        minHeight: "100vh",
+        overflow: "auto",
+        marginLeft: isNavCollapsed ? 70 : 210, 
+        transition: "margin-left 0.3s ease",
+        padding: "20px",
+        boxSizing: "border-box",
+      }}>
         {page === "home" && (
           <HomePage username={username} isAdmin={isAdmin} />
         )}

@@ -286,46 +286,6 @@ function Dashboard({ username: employeeID = "", onLogout }) {
         minHeight: "100vh",
       }}
     >
-      {/* Header */}
-      <div
-        className="flex justify-between items-center mb-8"
-        style={{
-          background: "rgba(255,255,255,0.96)",
-          borderRadius: "1rem",
-          boxShadow: "0 6px 24px 0 rgba(123,31,43,0.13)",
-          border: "2px solid #7b1f2b",
-          padding: "1.2rem 2rem",
-        }}
-      >
-        <h1
-          className="text-3xl font-extrabold tracking-wide"
-          style={{
-            color: "#7b1f2b",
-            letterSpacing: 2,
-            textShadow: "0 2px 8px #f8bbd0, 0 1px 0 #fff",
-          }}
-        >
-          Welcome, {employeeID} {isAdmin ? "(Admin)" : ""}
-        </h1>
-        <button
-          onClick={onLogout}
-          style={{
-            padding: "10px 28px",
-            background: "linear-gradient(90deg, #b71c1c 0%, #7b1f2b 100%)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            fontWeight: 700,
-            fontSize: 17,
-            boxShadow: "0 2px 8px 0 rgba(123,31,43,0.10)",
-            cursor: "pointer",
-            transition: "background 0.2s, transform 0.1s",
-            letterSpacing: 1,
-          }}
-        >
-          Logout
-        </button>
-      </div>
 
       {/* Export & Add & Import Buttons */}
       <div style={{ marginBottom: 18, textAlign: "right", display: "flex", justifyContent: "flex-end", gap: 12 }}>
