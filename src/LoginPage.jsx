@@ -1,6 +1,31 @@
 import React, { useState } from "react";
 import "./App.css";
 
+const styles = {
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #eef2ff 0%, #f0f9ff 100%)',
+    fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+  },
+  card: {
+    maxWidth: 420,
+    width: '100%',
+    padding: '2rem',
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.98)',
+    boxShadow: '0 12px 32px rgba(2,6,23,0.08)',
+    border: '1px solid rgba(2,6,23,0.04)'
+  },
+  logo: { width: 72, height: 72, margin: '0 auto', display: 'block', borderRadius: '50%' , background: '#fff', padding: 6},
+  title: { letterSpacing: 1, color: '#0f172a', fontWeight: 800, fontSize: '1.9rem', marginBottom: 6 },
+  subtitle: { color: '#334155', fontWeight: 500, fontSize: 14, marginBottom: 16 },
+  input: { width: '94%', padding: 12, borderRadius: 10, border: '1px solid rgba(15,23,42,0.06)', marginBottom: 12, fontSize: 15 },
+  button: { padding: '12px 0', width: '100%', borderRadius: 10, border: 'none', background: 'linear-gradient(90deg,#0ea5a4 0%,#0284c7 100%)', color: '#fff', fontWeight: 700, fontSize: 16 }
+};
+
 export default function LoginPage({ onLogin }) {
   const [employeeID, setEmployeeID] = useState("");
   const [password, setPassword] = useState("");
@@ -42,205 +67,32 @@ export default function LoginPage({ onLogin }) {
   };
 
   return (
-    <div
-      className="app-container"
-      style={{
-        background:
-          "linear-gradient(135deg, #4f8fc0 0%, #23395d 100%)",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        className="card"
-        style={{
-          maxWidth: 400,
-          width: "100%",
-          animation: "fadeInUp 0.7s",
-          boxShadow:
-            "0 12px 32px 0 rgba(123, 31, 43, 0.15), 0 1.5px 4px 0 rgba(183, 28, 28, 0.10)",
-          border: "1.5px solid #7b1f2b",
-          background: "rgba(255,255,255,0.97)",
-        }}
-      >
-        <div style={{ marginBottom: 24 }}>
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-            alt="WorldWide Staff System Logo"
-            style={{
-              width: 72,
-              height: 72,
-              margin: "0 auto",
-              display: "block",
-              borderRadius: "50%",
-              border: "3px solid #b71c1c",
-              background: "#fff5f5",
-              boxShadow: "0 2px 8px 0 rgba(123,31,43,0.10)",
-            }}
-          />
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <div style={{ marginBottom: 18 }}>
+          <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Logo" style={styles.logo} />
         </div>
-        <h2
-          className="title"
-          style={{
-            letterSpacing: 1,
-            color: "#7b1f2b",
-            fontWeight: 800,
-            fontSize: "2.1rem",
-            marginBottom: 8,
-            textShadow: "0 2px 8px #f8bbd0, 0 1px 0 #fff",
-          }}
-        >
-          WorldWide Staff System
-        </h2>
-        <div
-          style={{
-            color: "#b71c1c",
-            fontWeight: 500,
-            fontSize: 15,
-            marginBottom: 18,
-            letterSpacing: 0.5,
-          }}
-        >
-          Please sign in to continue
-        </div>
+        <h2 style={styles.title}>WorldWide Staff System</h2>
+        <div style={styles.subtitle}>Please sign in to continue</div>
         <form onSubmit={handleSubmit}>
           <div>
-            <input
-              type="text"
-              placeholder="Employee ID"
-              value={employeeID}
-              onChange={(e) => setEmployeeID(e.target.value)}
-              className="input"
-              style={{
-                marginBottom: 14,
-                padding: 12,
-                width: "100%",
-                border: "1.5px solid #b71c1c",
-                borderRadius: 7,
-                fontSize: 17,
-                background: "#fff5f5",
-                color: "#7b1f2b",
-                fontWeight: 500,
-                outline: "none",
-                boxShadow: "0 1px 4px 0 rgba(183,28,28,0.06)",
-                transition: "border 0.2s",
-              }}
-              disabled={loading}
-              autoFocus
-            />
+            <input type="text" placeholder="Employee ID" value={employeeID} onChange={(e) => setEmployeeID(e.target.value)} style={styles.input} disabled={loading} autoFocus />
           </div>
           <div>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-              style={{
-                marginBottom: 14,
-                padding: 12,
-                width: "100%",
-                border: "1.5px solid #b71c1c",
-                borderRadius: 7,
-                fontSize: 17,
-                background: "#fff5f5",
-                color: "#7b1f2b",
-                fontWeight: 500,
-                outline: "none",
-                boxShadow: "0 1px 4px 0 rgba(183,28,28,0.06)",
-                transition: "border 0.2s",
-              }}
-              disabled={loading}
-            />
+            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} disabled={loading} />
           </div>
-          {error && (
-            <div
-              style={{
-                color: "#b71c1c",
-                background: "#ffebee",
-                border: "1.5px solid #ef9a9a",
-                borderRadius: 6,
-                marginBottom: 14,
-                padding: "10px 0",
-                fontWeight: 600,
-                fontSize: 15,
-                letterSpacing: 0.5,
-              }}
-            >
-              {error}
-            </div>
-          )}
-          <button
-            type="submit"
-            style={{
-              padding: "12px 0",
-              width: "100%",
-              background:
-                "linear-gradient(90deg, #7b1f2b 0%, #b71c1c 100%)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: 18,
-              border: "none",
-              borderRadius: 7,
-              boxShadow: "0 2px 8px 0 rgba(123,31,43,0.10)",
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "background 0.2s",
-              marginTop: 2,
-              marginBottom: 2,
-              letterSpacing: 1,
-            }}
-            disabled={loading}
-          >
+          {error && <div style={{ color: '#ef4444', background: '#fff1f2', padding: 10, borderRadius: 8, marginBottom: 12 }}>{error}</div>}
+          <button type="submit" style={{ ...styles.button, opacity: loading ? 0.8 : 1 }} disabled={loading}>
             {loading ? (
-              <span>
-                <span
-                  className="loader"
-                  style={{
-                    display: "inline-block",
-                    width: 18,
-                    height: 18,
-                    border: "2.5px solid #fff",
-                    borderTop: "2.5px solid #b71c1c",
-                    borderRadius: "50%",
-                    animation: "spin 0.7s linear infinite",
-                    marginRight: 8,
-                    verticalAlign: "middle",
-                  }}
-                />{" "}
-                Signing in...
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid rgba(255,255,255,0.6)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Signing in...
               </span>
-            ) : (
-              "Sign In"
-            )}
+            ) : 'Sign In'}
           </button>
         </form>
-        <div
-          style={{
-            marginTop: 28,
-            fontSize: 13,
-            color: "#7b1f2b",
-            fontWeight: 500,
-            letterSpacing: 1,
-            opacity: 0.85,
-          }}
-        >
-          © 2025 WorldWide Staff System. All rights reserved.
-        </div>
+        <div style={{ marginTop: 24, fontSize: 13, color: '#64748b' }}>© 2025 WorldWide Staff System. All rights reserved.</div>
       </div>
-      <style>
-        {`
-        @keyframes fadeInUp {
-          0% { opacity: 0; transform: translateY(30px);}
-          100% { opacity: 1; transform: translateY(0);}
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg);}
-          100% { transform: rotate(360deg);}
-        }
-        `}
-      </style>
+      <style>{`@keyframes spin {0%{transform:rotate(0)}100%{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }

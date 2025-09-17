@@ -1,5 +1,111 @@
 import React, { useEffect, useState } from "react";
 
+// Centralized style tokens for a cleaner, more modern look
+const styles = {
+  container: {
+  padding: '2.5rem 1.5rem',
+  minHeight: '100vh',
+  background: '#f3f4f6',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
+    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+  },
+  controls: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 6,
+  },
+  buttonPrimary: {
+    padding: '9px 18px',
+    borderRadius: 10,
+    border: 'none',
+    fontWeight: 700,
+    fontSize: 14,
+    background: 'linear-gradient(90deg,#3b82f6 0%,#2563eb 100%)',
+    color: '#fff',
+    boxShadow: '0 6px 18px rgba(37,99,235,0.12)',
+    cursor: 'pointer',
+  },
+  buttonAccent: {
+    padding: '9px 18px',
+    borderRadius: 10,
+    border: 'none',
+    fontWeight: 700,
+    fontSize: 14,
+    background: 'linear-gradient(90deg,#06b6d4 0%,#0891b2 100%)',
+    color: '#04263b',
+    boxShadow: '0 6px 18px rgba(8,145,178,0.08)',
+    cursor: 'pointer',
+  },
+  buttonDanger: {
+    padding: '9px 18px',
+    borderRadius: 10,
+    border: 'none',
+    fontWeight: 700,
+    fontSize: 14,
+    background: 'linear-gradient(90deg,#ef4444 0%,#dc2626 100%)',
+    color: '#fff',
+    boxShadow: '0 6px 18px rgba(220,38,38,0.12)',
+    cursor: 'pointer',
+  },
+  buttonSecondary: {
+    padding: '9px 18px',
+    borderRadius: 10,
+    border: '1px solid rgba(15,23,42,0.06)',
+    fontWeight: 700,
+    fontSize: 14,
+    background: '#f3f4f6',
+    color: '#0f172a',
+    boxShadow: '0 4px 12px rgba(2,6,23,0.04)',
+    cursor: 'pointer',
+  },
+  card: {
+  background: '#f3f4f6',
+    borderRadius: 14,
+    padding: '1.6rem',
+    boxShadow: '0 10px 40px rgba(16,24,40,0.06)',
+    border: '1px solid rgba(15,23,42,0.04)',
+  },
+  searchInput: {
+    padding: '8px 12px',
+    borderRadius: 10,
+    border: '1px solid rgba(15,23,42,0.06)',
+    minWidth: 180,
+    fontSize: 14,
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: 14,
+    overflow: 'hidden',
+    borderRadius: 10,
+  },
+  thead: {
+    background: 'linear-gradient(90deg,#0ea5a4 0%,#0284c7 100%)',
+    color: '#fff',
+  },
+  th: {
+    padding: '12px 10px',
+    textAlign: 'left',
+    fontWeight: 700,
+    letterSpacing: 0.3,
+  },
+  td: {
+    padding: '10px 10px',
+    color: '#0f172a',
+  },
+  rowEven: { background: '#f3f4f6' },
+  rowOdd: { background: '#f3f4f6' },
+  modalOverlay: {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(2,6,23,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60,
+  },
+  modal: { background: '#f3f4f6', borderRadius: 12, padding: 22, minWidth: 320, boxShadow: '0 12px 48px rgba(2,6,23,0.25)' },
+};
+
 // Example API endpoint: http://localhost:8080/api/routine?employeeID=xxx
 function Dashboard({ username: employeeID = "", onLogout }) {
   const [routines, setRoutines] = useState([]);
@@ -31,6 +137,8 @@ function Dashboard({ username: employeeID = "", onLogout }) {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [order, setOrder] = useState("asc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch permission and initial routines
   useEffect(() => {
@@ -278,33 +386,19 @@ function Dashboard({ username: employeeID = "", onLogout }) {
     }
   };
 
+  const totalPages = Math.max(1, Math.ceil(routines.length / pageSize));
+  const startIdx = (page - 1) * pageSize;
+  const displayedRoutines = routines.slice(startIdx, startIdx + pageSize);
+
   return (
-    <div
-      className="min-h-screen px-2 py-8 font-sans"
-      style={{
-        background: "linear-gradient(135deg, #4f8fc0 0%, #23395d 100%)",
-        minHeight: "100vh",
-      }}
-    >
+    <div style={styles.container}>
 
       {/* Export & Add & Import Buttons */}
-      <div style={{ marginBottom: 18, textAlign: "right", display: "flex", justifyContent: "flex-end", gap: 12 }}>
+      <div style={styles.controls}>
         <button
           onClick={handleExport}
           disabled={exporting}
-          style={{
-            padding: "9px 22px",
-            background: "linear-gradient(90deg, #43a047 0%, #388e3c 100%)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 7,
-            fontWeight: 700,
-            fontSize: 16,
-            boxShadow: "0 2px 8px 0 rgba(67,160,71,0.10)",
-            cursor: exporting ? "not-allowed" : "pointer",
-            transition: "background 0.2s",
-            letterSpacing: 1,
-          }}
+          style={{ ...styles.buttonPrimary, cursor: exporting ? 'not-allowed' : 'pointer', opacity: exporting ? 0.8 : 1 }}
         >
           {exporting ? "Exporting..." : "Export to Excel"}
         </button>
@@ -312,23 +406,11 @@ function Dashboard({ username: employeeID = "", onLogout }) {
           <>
             <button
               onClick={() => setShowAddModal(true)}
-              style={{
-                padding: "9px 22px",
-                background: "linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)",
-                color: "#fff",
-                border: "none",
-                borderRadius: 7,
-                fontWeight: 700,
-                fontSize: 16,
-                boxShadow: "0 2px 8px 0 rgba(33,150,243,0.10)",
-                cursor: adding ? "not-allowed" : "pointer",
-                transition: "background 0.2s",
-                letterSpacing: 1,
-              }}
+              style={{ ...styles.buttonAccent, cursor: adding ? 'not-allowed' : 'pointer', opacity: adding ? 0.8 : 1 }}
             >
               Add Routine
             </button>
-            <label style={{ position: "relative" }}>
+            <label style={{ position: 'relative' }}>
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -336,23 +418,7 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                 onChange={handleImportExcel}
                 disabled={importing}
               />
-              <span
-                style={{
-                  display: "inline-block",
-                  padding: "9px 22px",
-                  background: "linear-gradient(90deg, #388e3c 0%, #43a047 100%)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 7,
-                  fontWeight: 700,
-                  fontSize: 16,
-                  boxShadow: "0 2px 8px 0 rgba(67,160,71,0.10)",
-                  cursor: importing ? "not-allowed" : "pointer",
-                  transition: "background 0.2s",
-                  letterSpacing: 1,
-                  userSelect: "none",
-                }}
-              >
+              <span style={{ ...styles.buttonPrimary, display: 'inline-block', cursor: importing ? 'not-allowed' : 'pointer', opacity: importing ? 0.8 : 1 }}>
                 {importing ? "Importing..." : "Import Excel"}
               </span>
             </label>
@@ -362,30 +428,8 @@ function Dashboard({ username: employeeID = "", onLogout }) {
 
       {/* Add Routine Modal (admin only) */}
       {showAddModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(36, 50, 77, 0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: "2rem 2.5rem",
-              boxShadow: "0 8px 32px rgba(36,50,77,0.18)",
-              minWidth: 340,
-              maxWidth: 400,
-            }}
-          >
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
             <h3 style={{ fontSize: 22, fontWeight: 700, color: "#23395d", marginBottom: 18, letterSpacing: 1 }}>
               Add New Routine
             </h3>
@@ -397,101 +441,41 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                 <li>SN/Flight/From/To/Remarks/Staff In Charge/Supervisor: <span style={{ color: "#388e3c" }}>Text</span></li>
               </ul>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input placeholder="Date (e.g. 2024-07-01)" value={addRoutine.date} onChange={e => setAddRoutine(r => ({ ...r, date: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="SN" value={addRoutine.sn} onChange={e => setAddRoutine(r => ({ ...r, sn: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="Flight" value={addRoutine.flight} onChange={e => setAddRoutine(r => ({ ...r, flight: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="From" value={addRoutine.from} onChange={e => setAddRoutine(r => ({ ...r, from: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="To" value={addRoutine.to} onChange={e => setAddRoutine(r => ({ ...r, to: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="STA (e.g. 08:30:00)" value={addRoutine.sta} onChange={e => setAddRoutine(r => ({ ...r, sta: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="ETA (e.g. 08:45:00)" value={addRoutine.eta} onChange={e => setAddRoutine(r => ({ ...r, eta: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="ATA (e.g. 08:50:00)" value={addRoutine.ata} onChange={e => setAddRoutine(r => ({ ...r, ata: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="Remarks" value={addRoutine.remarks} onChange={e => setAddRoutine(r => ({ ...r, remarks: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="Staff In Charge" value={addRoutine.employeeID} onChange={e => setAddRoutine(r => ({ ...r, employeeID: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
-              <input placeholder="Supervisor" value={addRoutine.supervisor} onChange={e => setAddRoutine(r => ({ ...r, supervisor: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: "1px solid #4f8fc0" }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input placeholder="Date (e.g. 2024-07-01)" value={addRoutine.date} onChange={e => setAddRoutine(r => ({ ...r, date: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="SN" value={addRoutine.sn} onChange={e => setAddRoutine(r => ({ ...r, sn: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="Flight" value={addRoutine.flight} onChange={e => setAddRoutine(r => ({ ...r, flight: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="From" value={addRoutine.from} onChange={e => setAddRoutine(r => ({ ...r, from: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="To" value={addRoutine.to} onChange={e => setAddRoutine(r => ({ ...r, to: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="STA (e.g. 08:30:00)" value={addRoutine.sta} onChange={e => setAddRoutine(r => ({ ...r, sta: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="ETA (e.g. 08:45:00)" value={addRoutine.eta} onChange={e => setAddRoutine(r => ({ ...r, eta: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="ATA (e.g. 08:50:00)" value={addRoutine.ata} onChange={e => setAddRoutine(r => ({ ...r, ata: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="Remarks" value={addRoutine.remarks} onChange={e => setAddRoutine(r => ({ ...r, remarks: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="Staff In Charge" value={addRoutine.employeeID} onChange={e => setAddRoutine(r => ({ ...r, employeeID: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
+              <input placeholder="Supervisor" value={addRoutine.supervisor} onChange={e => setAddRoutine(r => ({ ...r, supervisor: e.target.value }))} style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)' }} />
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 22 }}>
-              <button
-                onClick={handleAddRoutine}
-                disabled={adding}
-                style={{
-                  padding: "9px 22px",
-                  background: "linear-gradient(90deg, #43a047 0%, #388e3c 100%)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 7,
-                  fontWeight: 700,
-                  fontSize: 16,
-                  boxShadow: "0 2px 8px 0 rgba(67,160,71,0.10)",
-                  cursor: adding ? "not-allowed" : "pointer",
-                  transition: "background 0.2s",
-                  letterSpacing: 1,
-                }}
-              >
-                {adding ? "Adding..." : "Add"}
-              </button>
-              <button
-                onClick={() => setShowAddModal(false)}
-                disabled={adding}
-                style={{
-                  padding: "9px 22px",
-                  background: "#eee",
-                  color: "#23395d",
-                  border: "none",
-                  borderRadius: 7,
-                  fontWeight: 700,
-                  fontSize: 16,
-                  boxShadow: "0 2px 8px 0 rgba(36,50,77,0.10)",
-                  cursor: adding ? "not-allowed" : "pointer",
-                  transition: "background 0.2s",
-                  letterSpacing: 1,
-                }}
-              >
-                Cancel
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 22 }}>
+              <button onClick={handleAddRoutine} disabled={adding} style={{ ...styles.buttonPrimary, opacity: adding ? 0.8 : 1 }}>{adding ? 'Adding...' : 'Add'}</button>
+              <button onClick={() => setShowAddModal(false)} disabled={adding} style={{ ...styles.buttonSecondary }}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Content */}
-      <div
-        style={{
-          background: "rgba(255,255,255,0.98)",
-          borderRadius: "1.1rem",
-          boxShadow: "0 10px 32px 0 rgba(123,31,43,0.13)",
-          border: "2px solid #7b1f2b",
-          padding: "2.2rem 1.5rem 2rem 1.5rem",
-          maxWidth: 1200,
-          margin: "0 auto",
-        }}
-      >
+  {/* Main Content */}
+  <div style={styles.card}>
         <div className="flex items-center justify-between mb-6">
-          <h2
-            className="text-2xl font-bold"
-            style={{
-              color: "#b71c1c",
-              letterSpacing: 1,
-              textShadow: "0 1px 4px #f8bbd0",
-            }}
-          >
+          <h2 className="text-2xl font-bold" style={{ color: '#0f172a', letterSpacing: 1 }}>
             {isAdmin ? "All Employees' Routine Table" : "My Duty Routine"}
           </h2>
           {/* Search Box */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{
-                padding: "7px 12px",
-                borderRadius: 6,
-                border: "1.5px solid #b71c1c",
-                fontSize: 15,
-                minWidth: 120,
-                outline: "none"
-              }}
+              style={styles.searchInput}
             />
           </div>
         </div>
@@ -529,33 +513,19 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                 {successMsg}
               </div>
             )}
-            <table
-              className="min-w-full text-sm"
-              style={{
-                borderRadius: "0.7rem",
-                overflow: "hidden",
-                boxShadow: "0 2px 8px 0 rgba(123,31,43,0.08)",
-                border: "1.5px solid #b71c1c",
-                background: "#fff",
-              }}
-            >
-              <thead
-                style={{
-                  background: "linear-gradient(90deg, #b71c1c 0%, #7b1f2b 100%)",
-                  color: "#fff",
-                }}
-              >
+            <table className="min-w-full text-sm" style={styles.table}>
+              <thead style={styles.thead}>
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('date'); setOrder(order === 'asc' && sortBy==='date' ? 'desc' : 'asc'); }}>
+                  <th style={{ ...styles.th, cursor: 'pointer' }} onClick={() => { setSortBy('date'); setOrder(order === 'asc' && sortBy==='date' ? 'desc' : 'asc'); }}>
                     Date {sortBy==='date' ? (order==='asc'?'▲':'▼') : ''}
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('sn'); setOrder(order === 'asc' && sortBy==='sn' ? 'desc' : 'asc'); }}>
+                  <th style={{ ...styles.th, cursor: 'pointer' }} onClick={() => { setSortBy('sn'); setOrder(order === 'asc' && sortBy==='sn' ? 'desc' : 'asc'); }}>
                     SN {sortBy==='sn' ? (order==='asc'?'▲':'▼') : ''}
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('flight'); setOrder(order === 'asc' && sortBy==='flight' ? 'desc' : 'asc'); }}>
+                  <th style={{ ...styles.th, cursor: 'pointer' }} onClick={() => { setSortBy('flight'); setOrder(order === 'asc' && sortBy==='flight' ? 'desc' : 'asc'); }}>
                     Flight {sortBy==='flight' ? (order==='asc'?'▲':'▼') : ''}
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('from'); setOrder(order === 'asc' && sortBy==='from' ? 'desc' : 'asc'); }}>
+                  <th style={{ ...styles.th, cursor: 'pointer' }} onClick={() => { setSortBy('from'); setOrder(order === 'asc' && sortBy==='from' ? 'desc' : 'asc'); }}>
                     From {sortBy==='from' ? (order==='asc'?'▲':'▼') : ''}
                   </th>
                   <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('to'); setOrder(order === 'asc' && sortBy==='to' ? 'desc' : 'asc'); }}>
@@ -579,19 +549,18 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                   <th className="px-4 py-3 text-left font-semibold" style={{cursor:'pointer'}} onClick={() => { setSortBy('supervisor'); setOrder(order === 'asc' && sortBy==='supervisor' ? 'desc' : 'asc'); }}>
                     Supervisor {sortBy==='supervisor' ? (order==='asc'?'▲':'▼') : ''}
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                  <th style={styles.th}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {routines.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    style={{
-                      background: idx % 2 === 0 ? "#fff5f5" : "#fbe9e7",
-                      borderBottom: "1px solid #f8bbd0",
-                    }}
-                  >
-                    {editIdx === idx ? (
+                  {displayedRoutines.map((item, idx) => {
+                    const globalIdx = startIdx + idx;
+                    return (
+                    <tr
+                      key={item.JobID || globalIdx}
+                      style={{ ...((globalIdx % 2 === 0) ? styles.rowEven : styles.rowOdd), borderBottom: '1px solid rgba(15,23,42,0.03)' }}
+                    >
+                      {editIdx === globalIdx ? (
                       <>
                         <td className="px-4 py-2">
                           <input
@@ -685,39 +654,14 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                           <button
                             onClick={handleSave}
                             disabled={saving}
-                            style={{
-                              marginRight: 8,
-                              padding: "7px 18px",
-                              background: "linear-gradient(90deg, #7b1f2b 0%, #b71c1c 100%)",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: 7,
-                              fontWeight: 700,
-                              fontSize: 15,
-                              boxShadow: "0 2px 8px 0 rgba(123,31,43,0.10)",
-                              cursor: saving ? "not-allowed" : "pointer",
-                              transition: "background 0.2s",
-                              letterSpacing: 1,
-                            }}
+                            style={{ ...styles.buttonPrimary, marginRight: 8, opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
                           >
                             Save
                           </button>
                           <button
                             onClick={handleCancel}
                             disabled={saving}
-                            style={{
-                              padding: "7px 18px",
-                              background: "#f8bbd0",
-                              color: "#7b1f2b",
-                              border: "none",
-                              borderRadius: 7,
-                              fontWeight: 700,
-                              fontSize: 15,
-                              boxShadow: "0 2px 8px 0 rgba(123,31,43,0.10)",
-                              cursor: saving ? "not-allowed" : "pointer",
-                              transition: "background 0.2s",
-                              letterSpacing: 1,
-                            }}
+                            style={{ ...styles.buttonSecondary, opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
                           >
                             Cancel
                           </button>
@@ -737,67 +681,28 @@ function Dashboard({ username: employeeID = "", onLogout }) {
                         <td className="px-4 py-2">{item.employeeID}</td>
                         <td className="px-4 py-2">{item.supervisor}</td>
                         <td className="px-4 py-2" style={{ display: "flex", gap: 8 }}>
-                          <button
-                            onClick={() => handleEdit(idx)}
-                            style={{
-                              padding: "7px 18px",
-                              background: "linear-gradient(90deg, #b71c1c 0%, #7b1f2b 100%)",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: 7,
-                              fontWeight: 700,
-                              fontSize: 15,
-                              boxShadow: "0 2px 8px 0 rgba(123,31,43,0.10)",
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                              letterSpacing: 1,
-                            }}
-                          >
-                            Edit
-                          </button>
+                          <button onClick={() => handleEdit(globalIdx)} style={{ ...styles.buttonSecondary }}>Edit</button>
                           {isAdmin && (
-                            <button
-                              onClick={() => handleDeleteRoutine(item.JobID)}
-                              style={{
-                                padding: "7px 18px",
-                                background: "linear-gradient(90deg, #d32f2f 0%, #b71c1c 100%)",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 7,
-                                fontWeight: 700,
-                                fontSize: 15,
-                                boxShadow: "0 2px 8px 0 rgba(211,47,47,0.10)",
-                                cursor: "pointer",
-                                transition: "background 0.2s",
-                                letterSpacing: 1,
-                              }}
-                            >
-                              Delete
-                            </button>
+                            <button onClick={() => handleDeleteRoutine(item.JobID)} style={{ ...styles.buttonDanger }}>Delete</button>
                           )}
                         </td>
                       </>
                     )}
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: '#f3f4f6', cursor: 'pointer' }}>Prev</button>
+              <div style={{ fontWeight: 700 }}>{page} / {totalPages}</div>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.06)', background: '#f3f4f6', cursor: 'pointer' }}>Next</button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <footer
-        className="mt-10 text-center text-xs"
-        style={{
-          color: "#7b1f2b",
-          letterSpacing: 1,
-          fontWeight: 500,
-          opacity: 0.85,
-        }}
-      >
-        © 2025 WorldWide Staff System. All rights reserved.
-      </footer>
+  <footer className="mt-10 text-center text-xs" style={{ color: '#475569', letterSpacing: 1, fontWeight: 500, opacity: 0.85 }}>© 2025 WorldWide Staff System. All rights reserved.</footer>
     </div>
   );
 }
